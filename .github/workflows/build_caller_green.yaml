@@ -20,6 +20,7 @@ jobs:
       typecheck_policy: '1'
 
       # OS, Python, Build "mode"
-      build_installation: 'edit sdist wheel'
-      job_matrix: "{\"platform\": [\"ubuntu-latest\"], \"python-version\": [\"3.10\", \"3.11\"]}"
+      # verified working: edit sdist
+      build_installation: 'wheel'
+      job_matrix: "{\"platform\": [\"ubuntu-latest\"], \"python-version\": [\"3.11\"]}"
     

@@ -21,8 +21,3 @@ jobs:
 
       run_policy: '1'
       typecheck_policy: '1'
-
-      # would be nice to NOT have to specify these
-      pep440_version: '0.0.1'
-
-    

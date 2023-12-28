@@ -8,8 +8,8 @@ name = "minimum_python"
 version = "0.0.1"
 description = "Automated Workflows Test_Build-Compatible Python Project"
 authors = ["Konstantinos Lampridis <k.lampridis@hotmail.com>"]
-readme = README.md
-long_description_content_type = 'text/markdown'
+readme = "README.md"
+long_description_content_type = "text/markdown"
 
 packages = [
     { include = "minimum_python", from = "src" },

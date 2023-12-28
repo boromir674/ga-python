@@ -14,13 +14,15 @@ jobs:
   call_test_build_job:
     uses: boromir674/automated-workflows/.github/workflows/test_buld.yml@test
     with:
-      distro_name: minimum_python
-      pep440_version: '0.0.1'
-      run_policy: '1'
-      typecheck_policy: '1'
-
       # OS, Python, Build "mode"
       # verified working: edit sdist
       build_installation: 'dev build'
       job_matrix: "{\"platform\": [\"ubuntu-latest\"], \"python-version\": [\"3.11\"]}"
+
+      run_policy: '1'
+      typecheck_policy: '1'
+
+      # would be nice to NOT have to specify these
+      pep440_version: '0.0.1'
+
     

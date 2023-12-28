@@ -21,6 +21,6 @@ jobs:
 
       # OS, Python, Build "mode"
       # verified working: edit sdist
-      build_installation: 'wheel'
+      build_installation: 'dev build'
       job_matrix: "{\"platform\": [\"ubuntu-latest\"], \"python-version\": [\"3.11\"]}"
     

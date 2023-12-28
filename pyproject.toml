@@ -1,0 +1,85 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Information required for building (sdist/wheel)
+[tool.poetry]
+name = "minimum_python"
+version = "0.0.1"
+description = "Automated Workflows Test_Build-Compatible Python Project"
+authors = ["Konstantinos Lampridis <k.lampridis@hotmail.com>"]
+
+packages = [
+    { include = "minimum_python", from = "src" },
+]
+
+include = [
+    { path = "tests", format = "sdist" },
+    { path = "docs/**/*.rst", format = "sdist" },
+    { path = "docs/conf.py", format = "sdist" },
+    { path = "src/**/*.typed", format = "sdist" },
+    { path = "src/stubs/*.pyi", format = "sdist" },
+    "pyproject.toml",
+    "LICENSE",
+    "README.rst",
+    "CONTRIBUTING.md",
+    "CHANGELOG.rst",
+]
+
+exclude = [
+    "docs/*",
+    "requirements/*",
+    "scripts/*.py",
+    "tox.ini",
+    ".circleci/config.yml",
+    ".coveragerc",
+    ".DS_Store",
+    ".gitignore",
+    ".prospector.yml",
+    ".pylintrc",
+    ".readthedocs.yml",
+    ".scrutinizer.yml",
+    ".travis.yml"
+]
+
+# Caret requirements allow SemVer compatible updates to a specified version. An update is allowed if the new version number does not modify the left-most non-zero digit in the major, minor, patch grouping. For instance, if we previously ran poetry add requests@^2.13.0 and wanted to update the library and ran poetry update requests, poetry would update us to version 2.14.0 if it was available, but would not update us to 3.0.0. If instead we had specified the version string as ^0.1.13, poetry would update to 0.1.14 but not 0.2.0. 0.0.x is not considered compatible with any other version.
+# REQUIREMENT  VERSIONS ALLOWED
+# ^1.2.3	   >=1.2.3 <2.0.0
+# ^1.2	       >=1.2.0 <2.0.0
+# ^1	       >=1.0.0 <2.0.0
+# ^0.2.3	   >=0.2.3 <0.3.0
+# ^0.0.3	   >=0.0.3 <0.0.4
+# ^0.0	       >=0.0.0 <0.1.0
+# ^0	       >=0.0.0 <1.0.0
+# "~" is the more conservative compared to "^"
+# Tilde requirements specify a minimal version with some ability to update. If you specify a major, minor, and patch version or only a major and minor version, only patch-level changes are allowed. If you only specify a major version, then minor- and patch-level changes are allowed.
+# REQUIREMENT  VERSIONS ALLOWED
+# ~1.2.3	   >=1.2.3 <1.3.0
+# ~1.2	       >=1.2.0 <1.3.0
+# ~1	       >=1.0.0 <2.0.0
+
+
+### Dependency Constraints, aka Requirements ###
+[tool.poetry.dependencies]
+python = "^3.10"
+
+# Test: packages imported in test code and packages required for the "test runner"
+pytest = { version = ">= 6.2.4", optional = true }
+pytest-cov = { version = ">= 2.12", optional = true }
+
+# Type Checking: packages required for the type check (ie mypy) to pass
+mypy = { version = "== 0.961", optional = true }
+
+[tool.poetry.extras]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+typing = [
+    "mypy",
+    "pytest",
+]
+
+# TOOLS
+[tool.software-release]
+version_variable = "src/minimum_python/__init__.py:__version__"

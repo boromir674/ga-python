@@ -46,7 +46,7 @@ jobs:
           echo "ARTIFACT_FILES: $ARTIFACT_FILES"
           ARTIFACT_FILES_COUNT=$(ls -la dist-local | wc -l)
           echo "ARTIFACT_FILES_COUNT: $ARTIFACT_FILES_COUNT"
-          if [ "$ARTIFACT_FILES_COUNT" -ne "2" ]; then
+          if [ "$ARTIFACT_FILES_COUNT" -ne "5" ]; then
             echo "ERROR: Expected 2 Files, got $ARTIFACT_FILES_COUNT"
             exit 1
           fi

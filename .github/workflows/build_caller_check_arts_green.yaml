@@ -1,10 +1,16 @@
 name: "GREEN: Test Build Caller Pol 1"
 
+# export tt=build_arts-g
+# git tag -d "$tt"; git push --delete origin "$tt";
+# git tag "$tt" && git push origin "$tt"
+
+# export tt=build_arts-g && git tag -d "$tt"; git push --delete origin "$tt"; git tag "$tt" && git push origin "$tt"
+
 # Test Scenario:
 # When we build with default parameters
 # Test Suite Passes and Produces Artifacts
 
-# Wehn downloading artifacts, the .tar.gz file should be there
+# When downloading artifacts, the .tar.gz file should be there
 
 on:
   workflow_dispatch:
@@ -21,7 +27,7 @@ jobs:
   call_test_build_job:
     uses: boromir674/automated-workflows/.github/workflows/test_buld.yml@test
     with:
-      build_installation: 'build'
+      build_installation: 'sdist wheel'
       job_matrix: "{\"platform\": [\"ubuntu-latest\"], \"python-version\": [\"3.11\"]}"
       typecheck_policy: '0'
 
@@ -35,7 +41,7 @@ jobs:
         with:
           name: dist
           path: dist-local
-      # THEN there are only 2 Files (no more no less)
+      # THEN there are only 2 Files (no more, no less)
       # AND the .tar.gz file is there
       # AND the .whl file is there
 
@@ -51,9 +57,7 @@ jobs:
             exit 1
           fi
       # ASSERT .tar.gz FILE IS THERE
-      - name: List Files
-        run: |
-          ls -la dist-local
+      
       # ASSERT .whl FILE IS THERE
       - name: List Files
         run: |

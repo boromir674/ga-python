@@ -82,7 +82,7 @@ jobs:
           tar_gz_count=0
           whl_count=0
 
-          for file in "${BUILDS_DIR}/*"; do
+          for file in "${BUILDS_DIR}"/*; do
             echo "[INFO] Checking Build Artifact File: $file"
 
             if [ "$file" == "${BUILDS_DIR}/minimal_python-0.0.1.tar.gz" ]; then

@@ -59,7 +59,7 @@ jobs:
     with:
       job_matrix: "${{ needs.config_pipeline.outputs.JOB_MATRIX }}"
       build_installation: '${{ needs.config_pipeline.outputs.PY_INSTALL_METHODS }}'
-      artifact_name: '${{ needs.pipeline_config.outputs.CI_BUILDS }}'
+      artifact_name: '${{ needs.config_pipeline.outputs.CI_BUILDS }}'
 
   download_artifacts:
     needs: call_test_build_job
@@ -69,7 +69,7 @@ jobs:
       - name: Download 
         uses: actions/download-artifact@v4
         with:
-          name: '${{ needs.pipeline_config.outputs.CI_BUILDS }}'
+          name: '${{ needs.config_pipeline.outputs.CI_BUILDS }}'
           path: dist-local
 
       # THEN there is only 1 File

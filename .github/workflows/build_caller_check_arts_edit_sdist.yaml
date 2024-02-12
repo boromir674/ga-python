@@ -85,12 +85,12 @@ jobs:
           fi
 
       # AND it is a *.tar.gz FILE
-      - name: Assert only minimal_python-0.0.1.tar.gz file in loop
+      - name: Assert only minimum_python-0.0.1.tar.gz file in loop
         run: |
           for file in dist-local/*; do
             echo "file: $file"
-            if [ "$file" != "dist-local/minimal_python-0.0.1.tar.gz" ]; then
-              echo "ERROR: Expected only minimal_python-0.0.1.tar.gz File, got $file"
+            if [ "$file" != "dist-local/minimum_python-0.0.1.tar.gz" ]; then
+              echo "ERROR: Expected only minimum_python-0.0.1.tar.gz File, got $file"
               exit 1
             fi
           done

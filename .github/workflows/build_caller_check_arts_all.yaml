@@ -54,20 +54,22 @@ jobs:
   download_artifacts:
     needs: [config_pipeline, call_test_build_job]
     runs-on: ubuntu-latest
+    env:
+      BUILDS_DIR: dist-local
     steps:
       # WHEN we download Artifacts from CI
       - name: Download 
         uses: actions/download-artifact@v4
         with:
           name: '${{ needs.config_pipeline.outputs.CI_BUILDS }}'
-          path: dist-local
+          path: '${{ env.BUILDS_DIR }}'
 
       # THEN there are 2 Files
       - name: ASSERT only 2 files in Artifacts downloaded
         run: |
-          ARTIFACT_FILES=$(ls -la dist-local)
+          ARTIFACT_FILES=$(ls -la "$BUILDS_DIR")
           echo "ARTIFACT_FILES: $ARTIFACT_FILES"
-          ARTIFACT_FILES_COUNT=$(ls -la dist-local | wc -l)
+          ARTIFACT_FILES_COUNT=$(ls -la "$BUILDS_DIR" | wc -l)
           echo "ARTIFACT_FILES_COUNT: $ARTIFACT_FILES_COUNT"
           if [ "$ARTIFACT_FILES_COUNT" -ne "5" ]; then
             echo "ERROR: Expected only 2 Files, got $ARTIFACT_FILES_COUNT"
@@ -79,17 +81,21 @@ jobs:
         run: |
           tar_gz_count=0
           whl_count=0
-          for file in dist-local/*; do
+
+          for file in "${BUILDS_DIR}/*"; do
             echo "[INFO] Checking Build Artifact File: $file"
-            if [ "$file" == "dist-local/minimal_python-0.0.1.tar.gz" ]; then
+
+            if [ "$file" == "${BUILDS_DIR}/minimal_python-0.0.1.tar.gz" ]; then
               tar_gz_count=$((tar_gz_count+1))
-            elif [ "$file" == "dist-local/minimal_python-0.0.1.whl" ]; then
+
+            elif [ "$file" == "${BUILDS_DIR}/minimum_python-0.0.1-py3-none-any.whl" ]; then
               whl_count=$((whl_count+1))
             else
               echo "ERROR: Unexpected file $file"
               exit 1
             fi
           done
+
           if [ $tar_gz_count -ne 1 ] || [ $whl_count -ne 1 ]; then
             echo "ERROR: Expected exactly one .tar.gz and one .whl file, got $tar_gz_count .tar.gz and $whl_count .whl files"
             exit 1

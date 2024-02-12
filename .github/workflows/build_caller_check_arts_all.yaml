@@ -1,0 +1,102 @@
+name: "GREEN: Test Build Edit, Sdist, Wheel"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "test"
+    tags:
+      - "all"
+      - "build"
+      - "build_arts-all-g"
+
+env:
+  BUILD_MATRIX: "{\"platform\": [\"ubuntu-latest\"], \"python-version\":[\"3.11\"]}"
+
+jobs:
+  config_pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      ## ENVIRONMENT SETUP (Env Setup)
+      # BUILD on 'ubuntu-latest' Platform, and 'python 3.11' Runtime
+      - name: 'Decide Target Platform/Runtime to Build Python Distros for'
+        run: 'echo "JOB_MATRIX=$BUILD_MATRIX" >> $GITHUB_OUTPUT'
+        id: job_matrix
+      
+      ## TEST SETUP - How to Install Code after 'Env Setup'
+      # Code is Tested using all below Installation "methods"!
+      # - installing 'Edit Mode', inside a virtualenv
+      # - installing 'Sdist', inside a virtualenv, after building a Source Distro, from python code
+      # - installing 'Wheel', inside a virtualenv, after building a Binary Distro, from a Source Distro
+      - name: 'Decide Installations "methods" to Test'
+        run: 'echo PY_INSTALL_METHODS="edit, sdist, wheel" >> $GITHUB_OUTPUT'
+        id: install_methods
+
+      ## CI ARTIFACTS SETUP - where to upload Distro(s) Builds (ie .tar.gz, and .whl files)
+      - name: "Set Name/Alias, under which to upload Sdist/Wheel(s) Distros, as CI Artifacts"
+        run: 'echo CI_BUILDS="ci_builds" >> $GITHUB_OUTPUT'
+        id: ci_artifact_name
+
+    outputs:
+      JOB_MATRIX: "${{ steps.job_matrix.outputs.JOB_MATRIX }}"
+      PY_INSTALL_METHODS: "${{ steps.install_methods.outputs.PY_INSTALL_METHODS }}"
+      CI_BUILDS: "${{ steps.ci_artifact_name.outputs.CI_BUILDS }}"
+
+
+  call_test_build_job:
+    needs: config_pipeline
+    uses: boromir674/automated-workflows/.github/workflows/test_build.yml@test
+    with:
+      job_matrix: "${{ needs.config_pipeline.outputs.JOB_MATRIX }}"
+      build_installation: '${{ needs.config_pipeline.outputs.PY_INSTALL_METHODS }}'
+      artifact_name: '${{ needs.config_pipeline.outputs.CI_BUILDS }}'
+
+  download_artifacts:
+    needs: [config_pipeline, call_test_build_job]
+    runs-on: ubuntu-latest
+    env:
+      BUILDS_DIR: dist-local
+    steps:
+      # WHEN we download Artifacts from CI
+      - name: Download 
+        uses: actions/download-artifact@v4
+        with:
+          name: '${{ needs.config_pipeline.outputs.CI_BUILDS }}'
+          path: '${{ env.BUILDS_DIR }}'
+
+      # THEN there are 2 Files
+      - name: ASSERT only 2 files in Artifacts downloaded
+        run: |
+          ARTIFACT_FILES=$(ls -la "$BUILDS_DIR")
+          echo "ARTIFACT_FILES: $ARTIFACT_FILES"
+          ARTIFACT_FILES_COUNT=$(ls -la "$BUILDS_DIR" | wc -l)
+          echo "ARTIFACT_FILES_COUNT: $ARTIFACT_FILES_COUNT"
+          if [ "$ARTIFACT_FILES_COUNT" -ne "5" ]; then
+            echo "ERROR: Expected only 2 Files, got $ARTIFACT_FILES_COUNT"
+            exit 1
+          fi
+
+      # AND files extensions are .tar.gz, and .whl
+      - name: Assert minimum_python-0.0.1.tar.gz, and minimum_python-0.0.1.whl Files
+        run: |
+          tar_gz_count=0
+          whl_count=0
+
+          for file in "${BUILDS_DIR}"/*; do
+            echo "[INFO] Checking Build Artifact File: $file"
+
+            if [ "$file" == "${BUILDS_DIR}/minimum_python-0.0.1.tar.gz" ]; then
+              tar_gz_count=$((tar_gz_count+1))
+
+            elif [ "$file" == "${BUILDS_DIR}/minimum_python-0.0.1-py3-none-any.whl" ]; then
+              whl_count=$((whl_count+1))
+            else
+              echo "ERROR: Unexpected file $file"
+              exit 1
+            fi
+          done
+
+          if [ $tar_gz_count -ne 1 ] || [ $whl_count -ne 1 ]; then
+            echo "ERROR: Expected exactly one .tar.gz and one .whl file, got $tar_gz_count .tar.gz and $whl_count .whl files"
+            exit 1
+          fi

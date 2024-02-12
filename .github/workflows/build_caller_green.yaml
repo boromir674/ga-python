@@ -1,4 +1,4 @@
-name: "GREEN: Test Build Caller Pol 1"
+name: "GREEN: Test Build Edit, Wheel"
 
 on:
   workflow_dispatch:
@@ -10,14 +10,50 @@ on:
       - "build"
       - "build-g"
 
+env:
+  BUILD_MATRIX: "{\"platform\": [\"ubuntu-latest\"], \"python-version\":[\"3.11\"]}"
+
 jobs:
+
+  config_pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      ## ENVIRONMENT SETUP (Env Setup)
+      # BUILD on 'ubuntu-latest' Platform, and 'python 3.11' Runtime
+      - name: 'Decide Target Platform/Runtime to Build Python Distros for'
+        run: 'echo "JOB_MATRIX=$BUILD_MATRIX" >> $GITHUB_OUTPUT'
+        id: job_matrix
+      
+      ## TEST SETUP - How to Install Code after 'Env Setup'
+      # Code is Tested using all below Installation "methods"!
+      # - installing 'Edit Mode', inside a virtualenv
+      # - installing 'Sdist', inside a virtualenv, after building a Source Distro, from python code
+      # - installing 'Wheel', inside a virtualenv, after building a Binary Distro, from a Source Distro
+      - name: 'Decide Installations "methods" to Test'
+        run: 'echo PY_INSTALL_METHODS="edit, wheel" >> $GITHUB_OUTPUT'
+        id: install_methods
+
+      ## CI ARTIFACTS SETUP - where to upload Distro(s) Builds (ie .tar.gz, and .whl files)
+      - name: "Set Name/Alias, under which to upload Sdist/Wheel(s) Distros, as CI Artifacts"
+        run: 'echo CI_BUILDS="ci_builds" >> $GITHUB_OUTPUT'
+        id: ci_artifact_name
+
+    outputs:
+      JOB_MATRIX: "${{ steps.job_matrix.outputs.JOB_MATRIX }}"
+      PY_INSTALL_METHODS: "${{ steps.install_methods.outputs.PY_INSTALL_METHODS }}"
+      CI_BUILDS: "${{ steps.ci_artifact_name.outputs.CI_BUILDS }}"
+
+
   call_test_build_job:
+    needs: config_pipeline
     uses: boromir674/automated-workflows/.github/workflows/test_build.yml@test
     with:
-      # OS, Python, Build "mode"
-      # verified working: edit sdist
-      build_installation: 'edit wheel'
-      job_matrix: "{\"platform\": [\"ubuntu-latest\"], \"python-version\": [\"3.11\"]}"
+      # Produce Builds for all combinations of factors in JOB_MATRIX
+      job_matrix: "${{ needs.config_pipeline.outputs.JOB_MATRIX }}"
 
-      run_policy: '1'
+      # Do Static Type Checking with mypy
       typecheck_policy: '1'
+
+      # Test Code in 'Edit Mode' and Build (and Test) a Wheel Distro
+      build_installation: '${{ needs.config_pipeline.outputs.PY_INSTALL_METHODS }}'
+      run_policy: '1'

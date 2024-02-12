@@ -1,0 +1,96 @@
+name: "GREEN: Test Build Edit, Sdist"
+
+# export tt=build_arts-g
+# git tag -d "$tt"; git push --delete origin "$tt";
+# git tag "$tt" && git push origin "$tt"
+
+# export tt=build_arts-g && git tag -d "$tt"; git push --delete origin "$tt"; git tag "$tt" && git push origin "$tt"
+
+# Test Scenario:
+# When we only make an 'sdist' build; Source Distro / .tar.gz
+# Test Suite Passes and Produces 1 File Artifact
+
+# When downloading artifacts, the .tar.gz file should be there
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "test"
+    tags:
+      - "all"
+      - "build"
+      - "build_arts-es-g"
+
+
+jobs:
+
+  config_pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      ## ENVIRONMENT SETUP (Env Setup)
+      # BUILD on 'ubuntu-latest' Platform, and 'python 3.11' Runtime
+      - name: 'Decide Target Platform/Runtime to Build Python Distros for'
+        run: 'echo "JOB_MATRIX={\"platform\": [\"ubuntu-latest\"], \"python-version\": [\"3.11\"]}" >> $GITHUB_OUTPUT'
+        id: job_matrix
+      
+      ## TEST SETUP - How to Install Code after 'Env Setup'
+      # Code is Tested using all below Installation "methods"!
+      # - installing 'Edit Mode', inside a virtualenv
+      # - installing 'Sdist', inside a virtualenv, after building a Source Distro, from python code
+      - name: 'Decide Installations "methods" to Test'
+        run: 'echo PY_INSTALL_METHODS="edit, sdist" >> $GITHUB_OUTPUT'
+        id: install_methods
+
+      ## CI ARTIFACTS SETUP - where to upload Distro(s) Builds (ie .tar.gz, and .whl files)
+      - name: "Set Name/Alias, under which to upload Sdist/Wheel(s) Distros, as CI Artifacts"
+        run: 'echo CI_BUILDS="ci_builds" >> $GITHUB_OUTPUT'
+        id: ci_artifact_name
+
+    outputs:
+      JOB_MATRIX: "${{ steps.job_matrix.outputs.JOB_MATRIX }}"
+      PY_INSTALL_METHODS: "${{ steps.install_methods.outputs.PY_INSTALL_METHODS }}"
+      CI_BUILDS: "${{ steps.ci_artifact_name.outputs.CI_BUILDS }}"
+
+
+  call_test_build_job:
+    needs: config_pipeline
+    uses: boromir674/automated-workflows/.github/workflows/test_build.yml@test
+    with:
+      job_matrix: "${{ needs.config_pipeline.outputs.JOB_MATRIX }}"
+      build_installation: '${{ needs.config_pipeline.outputs.PY_INSTALL_METHODS }}'
+      artifact_name: '${{ needs.pipeline_config.outputs.CI_BUILDS }}'
+
+  download_artifacts:
+    needs: call_test_build_job
+    runs-on: ubuntu-latest
+    steps:
+      # WHEN we download Artifacts from CI
+      - name: Download 
+        uses: actions/download-artifact@v4
+        with:
+          name: '${{ needs.pipeline_config.outputs.CI_BUILDS }}'
+          path: dist-local
+
+      # THEN there is only 1 File
+      - name: ASSERT only 1 file in Artifacts downloaded
+        run: |
+          ARTIFACT_FILES=$(ls -la dist-local)
+          echo "ARTIFACT_FILES: $ARTIFACT_FILES"
+          ARTIFACT_FILES_COUNT=$(ls -la dist-local | wc -l)
+          echo "ARTIFACT_FILES_COUNT: $ARTIFACT_FILES_COUNT"
+          if [ "$ARTIFACT_FILES_COUNT" -ne "4" ]; then
+            echo "ERROR: Expected only 1 .tar.gz File, got $ARTIFACT_FILES_COUNT"
+            exit 1
+          fi
+
+      # AND it is a *.tar.gz FILE
+      - name: Assert only minimal_python-0.0.1.tar.gz file in loop
+        run: |
+          for file in dist-local/*; do
+            echo "file: $file"
+            if [ "$file" != "dist-local/minimal_python-0.0.1.tar.gz" ]; then
+              echo "ERROR: Expected only minimal_python-0.0.1.tar.gz File, got $file"
+              exit 1
+            fi
+          done

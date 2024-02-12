@@ -52,7 +52,7 @@ jobs:
       artifact_name: '${{ needs.config_pipeline.outputs.CI_BUILDS }}'
 
   download_artifacts:
-    needs: call_test_build_job
+    needs: [config_pipeline, call_test_build_job]
     runs-on: ubuntu-latest
     steps:
       # WHEN we download Artifacts from CI
